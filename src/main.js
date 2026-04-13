@@ -62,6 +62,7 @@ const clouds = new THREE.MeshStandardMaterial({
   map: loader.load("/src/textures/earth/8k_earth_clouds.jpg"),
   transparent: true,
   blending: THREE.AdditiveBlending,
+  alphaMap: loader.load("/src/textures/earth/earthcloudmaptrans-topaz.jpeg"),
 });
 const cloudsMesh = new THREE.Mesh(sphereGeometry, clouds);
 cloudsMesh.scale.setScalar(1.002);
@@ -79,7 +80,7 @@ glowMesh.scale.setScalar(1.005);
 earthGroup.add(glowMesh);
 
 // light
-const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
+const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
 sunLight.position.set(-2, 0.5, 1.5);
 scene.add(sunLight);
 
