@@ -1,6 +1,7 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import getStarfield from "./components/getStarfield.js";
 
 // renderer
 let w = window.innerWidth;
@@ -10,6 +11,8 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
 document.body.appendChild(renderer.domElement);
 
@@ -17,10 +20,10 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 
 // camera settings
-const fov = 75;
+const fov = 60;
 const aspect = w / h;
 const near = 0.1;
-const far = 10;
+const far = 30;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 camera.position.z = 2;
 
@@ -29,29 +32,46 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.02;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 0.5;
+controls.autoRotateSpeed = 0.2;
 
 // light
-const light = new THREE.HemisphereLight("white", "black");
-scene.add(light);
+const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+sunLight.position.set(-2, 0.5, 1.5);
+scene.add(sunLight);
 
 // geoms
-const sphereGeometry = new THREE.IcosahedronGeometry(1, 3);
-const sphereMaterial = new THREE.MeshStandardMaterial({
-  color: "blue",
-  flatShading: true,
+const loader = new THREE.TextureLoader();
+const earthGroup = new THREE.Group();
+scene.add(earthGroup);
+
+const sphereGeometry = new THREE.IcosahedronGeometry(1, 12);
+const sphereMaterial = new THREE.MeshPhongMaterial({
+  map: loader.load("../public/earth/8k_earth_daymap.jpg"),
+  specularMap: loader.load("../public/earth/earthspec1k-topaz.jpeg"),
+  bumpMap: loader.load("../public/earth/earthbump1k-topaz.jpeg"),
+  bumpScale: 1,
 });
 const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-scene.add(sphereMesh);
+earthGroup.add(sphereMesh);
 
-// wireframe
-const wireMaterial = new THREE.MeshBasicMaterial({
-  color: "lightgrey",
-  wireframe: true,
+// night light
+const nightLightMaterial = new THREE.MeshBasicMaterial({
+  map: loader.load("../public/earth/8k_earth_nightmap.jpg"),
+  blending: THREE.AdditiveBlending,
 });
-const wireMesh = new THREE.Mesh(sphereGeometry, wireMaterial);
-wireMesh.scale.setScalar(1.05);
-sphereMesh.add(wireMesh);
+const nightLightMesh = new THREE.Mesh(sphereGeometry, nightLightMaterial);
+earthGroup.add(nightLightMesh);
+
+const stars = getStarfield({ numStars: 2000 });
+scene.add(stars);
+// wireframe
+// const wireMaterial = new THREE.MeshBasicMaterial({
+//   color: "lightgrey",
+//   wireframe: true,
+// });
+// const wireMesh = new THREE.Mesh(sphereGeometry, wireMaterial);
+// wireMesh.scale.setScalar(1.05);
+// sphereMesh.add(wireMesh);
 
 // resizing listener
 window.addEventListener("resize", () => {
